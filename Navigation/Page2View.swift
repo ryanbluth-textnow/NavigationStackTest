@@ -16,10 +16,14 @@ struct Page2View: View {
             NavigationStackLink(destinationName: Page.page3(subsection: 1), destination: {
                 Page3View(subsection: 1)
             }, label: {
-                Text("To Page 3.1")
+                EmptyView()
             })
             Button("Pop") {
                 navigationStack.pop()
+            }
+            Button("To Page 3.1"){
+                // Example of controlling the navigation link from a button
+                navigationStack.push(Page.page3(subsection: 1))
             }
         }
         .navigationTitle("Page 2")

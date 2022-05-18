@@ -36,8 +36,7 @@ class NavigationStack<Name: Equatable>: ObservableObject {
         }
     }
     
-    fileprivate func push(_ name: Name) {
-        
+    func push(_ name: Name) {
         if stack.contains(name){
             fatalError("\(String(describing: name)) already exists in the navigation stack.")
         }
