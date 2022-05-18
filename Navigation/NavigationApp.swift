@@ -8,10 +8,12 @@
 import SwiftUI
 
 @main
-struct routerApp: App {
+struct NavigationApp: App {
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            NavigationStackView(initialDestinationName: Page.page1) {
+                Page1View()
+            }
         }
     }
 }
