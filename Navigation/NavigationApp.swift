@@ -9,9 +9,12 @@ import SwiftUI
 
 @main
 struct NavigationApp: App {
+    
+    let navigationStack = NavigationStack(initialIdentifier: Page.page1)
+    
     var body: some Scene {
         WindowGroup {
-            NavigationStackView(initialDestinationIdentifier: Page.page1) {
+            NavigationStackView(navigationStack: navigationStack) {
                 Page1View()
             }
         }

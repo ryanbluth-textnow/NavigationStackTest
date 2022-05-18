@@ -10,15 +10,15 @@ import Combine
 
 struct NavigationStackView<ItemIdentifier: Equatable, DestinationView: View>: View {
     
-    let initialDestinationIdentifier: ItemIdentifier
+    let navigationStack: NavigationStack<ItemIdentifier>
     let initialDestination: () -> DestinationView
-    
+
     var body: some View {
         NavigationView {
             initialDestination()
         }
         .navigationViewStyle(.stack)
-        .environmentObject(NavigationStack(initialIdentifier: initialDestinationIdentifier))
+        .environmentObject(navigationStack)
     }
 }
 
