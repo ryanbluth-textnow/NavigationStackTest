@@ -88,8 +88,9 @@ struct NavigationStackLink<Destination: View, Label: View, Name: Equatable>: Vie
                 self.isActive = $0.contains(self.destinationName)
             })
             .onAppear {
+                // If onAppear is called after wasShown is true we can assume the back button is being pressed
                 if wasShown {
-                    router.popTo(destinationName)
+                    router.pop()
                 }
                 wasShown = true
             }
