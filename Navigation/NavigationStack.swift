@@ -54,7 +54,9 @@ struct NavigationStackView<Name: Equatable, Destination: View>: View {
     var body: some View {
         NavigationView {
             initialDestination()
-        }.environmentObject(NavigationStack(initialName: initialDestinationName))
+        }
+        .navigationViewStyle(.stack)
+        .environmentObject(NavigationStack(initialName: initialDestinationName))
     }
 }
 
@@ -84,15 +86,17 @@ struct NavigationStackLink<Destination: View, Label: View, Name: Equatable>: Vie
             
             NavigationLink(isActive: $isActive, destination: destination, label: {
                 EmptyView()
-            }).isDetailLink(false).onReceive(router.$stack, perform: {
-                self.isActive = $0.contains(self.destinationName)
             })
-            .onAppear {
-                // If onAppear is called after wasShown is true we can assume the back button is being pressed
-                if wasShown {
-                    if router.stack.contains(destinationName){
-                        router.pop()
-                    }
+                .isDetailLink(false)
+                .onReceive(router.$stack, perform: {
+                    self.isActive = $0.contains(self.destinationName)
+                })
+                .onAppear {
+                    // If onAppear is called after wasShown is true we can assume the back button is being pressed
+                    if wasShown {
+                        if router.stack.contains(destinationName){
+                            router.pop()
+                        }
                 }
                 wasShown = true
             }
