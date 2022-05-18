@@ -15,7 +15,7 @@ struct Page3View: View {
     
     var body: some View {
         VStack {
-            NavigationStackLink(destinationName: Page.page3(subsection: subsection + 1), destination: {
+            NavigationStackLink(destinationIdentifier: Page.page3(subsection: subsection + 1), destination: {
                 Page3View(subsection: subsection + 1)
             }, label: {
                 Text("To Page 3.\(subsection + 1)")

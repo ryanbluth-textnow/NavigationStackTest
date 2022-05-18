@@ -11,7 +11,7 @@ import SwiftUI
 struct NavigationApp: App {
     var body: some Scene {
         WindowGroup {
-            NavigationStackView(initialDestinationName: Page.page1) {
+            NavigationStackView(initialDestinationIdentifier: Page.page1) {
                 Page1View()
             }
         }

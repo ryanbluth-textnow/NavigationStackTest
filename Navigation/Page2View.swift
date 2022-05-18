@@ -13,7 +13,7 @@ struct Page2View: View {
     
     var body: some View {
         VStack {
-            NavigationStackLink(destinationName: Page.page3(subsection: 1), destination: {
+            NavigationStackLink(destinationIdentifier: Page.page3(subsection: 1), destination: {
                 Page3View(subsection: 1)
             }, label: {
                 EmptyView()

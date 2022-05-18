@@ -9,26 +9,26 @@ import Foundation
 import SwiftUI
 import Combine
 
-class NavigationStack<Name: Equatable>: ObservableObject {
+class NavigationStack<ItemIdentifier: Equatable>: ObservableObject {
     
-    enum Action {
-        case push(name: Name)
-        case popTo(to: Name, stack: [Name])
+    fileprivate enum Action {
+        case push(ItemIdentifier)
+        case popTo(to: ItemIdentifier, stack: [ItemIdentifier])
     }
     
-    fileprivate var stack: [Name] = []
+    fileprivate var stack: [ItemIdentifier] = []
     
     fileprivate var actionSubject: PassthroughSubject<Action, Never>
     
-    init(initialName: Name){
-        stack = [initialName]
+    init(initialIdentifier: ItemIdentifier){
+        stack = [initialIdentifier]
         actionSubject = PassthroughSubject()
     }
     
-    func popTo(_ name: Name) {
-        if let index = stack.lastIndex(of: name) {
+    func popTo(_ identifier: ItemIdentifier) {
+        if let index = stack.lastIndex(of: identifier) {
             if index > 0 {
-                actionSubject.send(.popTo(to: name, stack: stack))
+                actionSubject.send(.popTo(to: identifier, stack: stack))
                 stack = Array(stack[0...index])
             }
         }
@@ -49,44 +49,43 @@ class NavigationStack<Name: Equatable>: ObservableObject {
         }
     }
     
-    func push(_ name: Name) {
-        if stack.contains(name){
-            fatalError("\(String(describing: name)) already exists in the navigation stack.")
+    func push(_ identifier: ItemIdentifier) {
+        if stack.contains(identifier){
+            fatalError("\(String(describing: identifier)) already exists in the navigation stack.")
         }
         
-        stack.append(name)
-        actionSubject.send(.push(name: name))
+        stack.append(identifier)
+        actionSubject.send(.push(identifier))
     }
 }
 
-struct NavigationStackView<Name: Equatable, Destination: View>: View {
+struct NavigationStackView<ItemIdentifier: Equatable, DestinationView: View>: View {
     
-    let initialDestinationName: Name
-    let initialDestination: () -> Destination
+    let initialDestinationIdentifier: ItemIdentifier
+    let initialDestination: () -> DestinationView
     
     var body: some View {
         NavigationView {
             initialDestination()
         }
         .navigationViewStyle(.stack)
-        .environmentObject(NavigationStack(initialName: initialDestinationName))
+        .environmentObject(NavigationStack(initialIdentifier: initialDestinationIdentifier))
     }
 }
 
-struct NavigationStackLink<Destination: View, Label: View, Name: Equatable>: View {
+struct NavigationStackLink<DestinationView: View, Label: View, ItemIdentifier: Equatable>: View {
     
-    @EnvironmentObject var router: NavigationStack<Name>
-    @Environment(\.presentationMode) var presentation
+    @EnvironmentObject var navigationStack: NavigationStack<ItemIdentifier>
     
-    let destination: () -> Destination
+    let destination: () -> DestinationView
     let label: () -> Label
-    let destinationName: Name
+    let destinationIdentifier: ItemIdentifier
     
     @State private var isActive: Bool = false
     @State private var wasShown: Bool = false
     
-    public init(destinationName: Name, @ViewBuilder destination: @escaping () -> Destination, @ViewBuilder label: @escaping () -> Label) {
-        self.destinationName = destinationName
+    public init(destinationIdentifier: ItemIdentifier, @ViewBuilder destination: @escaping () -> DestinationView, @ViewBuilder label: @escaping () -> Label) {
+        self.destinationIdentifier = destinationIdentifier
         self.destination = destination
         self.label = label
     }
@@ -94,7 +93,7 @@ struct NavigationStackLink<Destination: View, Label: View, Name: Equatable>: Vie
     var body: some View {
         Group {
             Button(action: {
-                self.router.push(self.destinationName)
+                self.navigationStack.push(self.destinationIdentifier)
                 self.isActive = true
             }, label: label)
             
@@ -102,28 +101,26 @@ struct NavigationStackLink<Destination: View, Label: View, Name: Equatable>: Vie
                 EmptyView()
             }
             .isDetailLink(false)
-            .onReceive(router.actionSubject) { action in
-               
+            .onReceive(navigationStack.actionSubject) { action in
                     switch action {
                     case .popTo(let to, let stack):
                         if let toIndex = stack.lastIndex(of: to) {
-                            if stack[toIndex + 1] == destinationName {
+                            if stack[toIndex + 1] == destinationIdentifier {
                                 isActive = false
                             }
                         }
-                    case .push(let name):
-                        if name == destinationName {
+                    case .push(let identifier):
+                        if identifier == destinationIdentifier {
                             isActive = true
                         }
                         break
                     }
                 }
-            
             .onAppear {
                 // If onAppear is called after wasShown is true we can assume the back button is being pressed
                 if wasShown {
-                    if router.stack.contains(destinationName){
-                        router.pop()
+                    if navigationStack.stack.contains(destinationIdentifier){
+                        navigationStack.pop()
                     }
                 }
                 wasShown = true
