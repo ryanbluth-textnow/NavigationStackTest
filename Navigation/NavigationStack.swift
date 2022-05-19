@@ -28,11 +28,14 @@ class NavigationStack<ItemIdentifier: Equatable>: ObservableObject {
     }
 
     fileprivate var stack: [ItemIdentifier] = []
-    fileprivate let actionSubject: PassthroughSubject<Action, Never>
-    fileprivate let navigationItemAppearedSubject: PassthroughSubject<ItemIdentifier, Never>
-
+    fileprivate var actions: AnyPublisher<Action, Never> {
+        return actionSubject.eraseToAnyPublisher()
+    }
+    
+    private let actionSubject: PassthroughSubject<Action, Never>
+    private let navigationItemAppearedSubject: PassthroughSubject<ItemIdentifier, Never>
     private var navigationItemAppearedSubscription: AnyCancellable?
-
+    
     init(initialIdentifier: ItemIdentifier) {
         self.stack = [initialIdentifier]
         self.actionSubject = PassthroughSubject()
@@ -84,9 +87,14 @@ class NavigationStack<ItemIdentifier: Equatable>: ObservableObject {
         stack.append(identifier)
         actionSubject.send(.push(identifier))
     }
+    
+    fileprivate func navigationItemAppeared(_ identifier: ItemIdentifier) {
+        navigationItemAppearedSubject.send(identifier)
+    }
 }
 
 struct NavigationStackLink<DestinationView: View, LabelView: View, ItemIdentifier: Equatable>: View {
+    
     @EnvironmentObject var navigationStack: NavigationStack<ItemIdentifier>
 
     let destination: () -> DestinationView
@@ -110,13 +118,13 @@ struct NavigationStackLink<DestinationView: View, LabelView: View, ItemIdentifie
 
             NavigationLink(isActive: $isActive, destination: {
                 destination().onAppear {
-                    navigationStack.navigationItemAppearedSubject.send(destinationIdentifier)
+                    navigationStack.navigationItemAppeared(destinationIdentifier)
                 }
             }) {
                 EmptyView()
             }
             .isDetailLink(false)
-            .onReceive(navigationStack.actionSubject) { action in
+            .onReceive(navigationStack.actions) { action in
                 switch action {
                 case let .pop(identifier):
                     if identifier == destinationIdentifier {
