@@ -86,12 +86,6 @@ class NavigationStack<ItemIdentifier: Equatable>: ObservableObject {
         stack.append(identifier)
         actionSubject.send(.push(identifier))
     }
-    
-    func viewAppeared(_ identifier: ItemIdentifier) {
-        if stack.contains(identifier) {
-            
-        }
-    }
 }
 
 
