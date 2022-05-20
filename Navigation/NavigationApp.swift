@@ -16,9 +16,8 @@ struct NavigationApp: App {
     let coordinator: TestCoordinator
     
     init() {
-        navigationStack = NavigationStack<Page>()
+        navigationStack = NavigationStack<Page>(rootItem: .page1)
         coordinator = TestCoordinator(navigationStack: navigationStack)
-        navigationStack.push(.page1)
     }
     
     var body: some Scene {

@@ -31,7 +31,7 @@ struct Router<ItemIdentifier, RB: RouteBuilder>: View where RB.ItemIdentifier ==
     // Builds a recursive NavigationLink structrue to match the current navigation stack.
     @ViewBuilder private func navigationView() -> some View {
         let res: AnyView? = navigationStack.stack.reversed().reduce(nil, { res, identifier in
-            if identifier == navigationStack.stack.first! {
+            if let firstStackIdentifier = navigationStack.stack.first, identifier == firstStackIdentifier {
                 return AnyView(
                     VStack {
                         routeBuilder.routeView(identifier).onAppear {
@@ -62,22 +62,23 @@ struct Router<ItemIdentifier, RB: RouteBuilder>: View where RB.ItemIdentifier ==
 
 class NavigationStack<ItemIdentifier: Equatable>: ObservableObject {
    
-    @Published fileprivate var stack: [ItemIdentifier] = []
+    @Published private(set) var stack: [ItemIdentifier]
     
     private let navigationItemAppearedSubject: PassthroughSubject<ItemIdentifier, Never>
     private var navigationItemAppearedSubscription: AnyCancellable?
     
-    init() {
-        self.stack = []
+    init(rootItem: ItemIdentifier) {
+        self.stack = [rootItem]
         self.navigationItemAppearedSubject = PassthroughSubject()
         
         // Collect the last and previous values from the navigationItemAppearedSubject so we can compare them.
         // We know the current view was popped by some external factor(ex: the back button) if the next value is before the previous value in the stack
-        self.navigationItemAppearedSubscription = navigationItemAppearedSubject.scan((nil, nil)) { previous, next in
+        self.navigationItemAppearedSubscription = navigationItemAppearedSubject.scan((nil, nil)) { previousIdentifiers, currentIdentifier in
             // Collect the previous value and the next value in a tuple
             // ex: (nil, nil) -> .identifier1 = (nil, identifier1) -> .identifier2 = (identifier1, identifier2) -> .identifier2 = (identifier2, identifier3)
-            (previous.1, next)
-        }.sink(receiveValue: { [weak self] values in
+            (previousIdentifiers.1, currentIdentifier)
+        }
+        .sink(receiveValue: { [weak self] values in
             guard let self = self else { return }
             // Compare the next and previous identifiers in order to determine if a view was popped
             if let prev = values.0, let next = values.1, let prevIndex = self.stack.lastIndex(of: prev), let nextIndex = self.stack.lastIndex(of: next) {

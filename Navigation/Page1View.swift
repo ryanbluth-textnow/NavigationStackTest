@@ -19,6 +19,9 @@ struct Page1View: View {
             Button("To error") {
                 coordinator.toError()
             }
+            Button("Pop") {
+                coordinator.toError()
+            }
         }
         .navigationTitle("Page 1")
     }
