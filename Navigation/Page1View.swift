@@ -9,13 +9,16 @@ import SwiftUI
 
 struct Page1View: View {
     
+    @EnvironmentObject var coordinator: TestCoordinator
+    
     var body: some View {
         VStack {
-            NavigationStackLink(destinationIdentifier: Page.page2, destination: {
-                Page2View()
-            }, label: {
-                Text("To Page 2")
-            })
+            Button("To page 2") {
+                coordinator.toPage2()
+            }
+            Button("To error") {
+                coordinator.toError()
+            }
         }
         .navigationTitle("Page 1")
     }

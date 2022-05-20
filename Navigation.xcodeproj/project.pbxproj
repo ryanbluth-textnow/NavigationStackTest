@@ -15,6 +15,8 @@
 		F6A61B4C2833FC5B00C749D4 /* Page3View.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6A61B4B2833FC5B00C749D4 /* Page3View.swift */; };
 		F6A61B4E28349C4F00C749D4 /* NavigationStack.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6A61B4D28349C4F00C749D4 /* NavigationStack.swift */; };
 		F6A61B5028349F0600C749D4 /* Page.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6A61B4F28349F0600C749D4 /* Page.swift */; };
+		F6A61B6428380EEA00C749D4 /* ErrorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6A61B6328380EEA00C749D4 /* ErrorView.swift */; };
+		F6A61B66283811B000C749D4 /* Test.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6A61B65283811B000C749D4 /* Test.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -27,6 +29,8 @@
 		F6A61B4B2833FC5B00C749D4 /* Page3View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Page3View.swift; sourceTree = "<group>"; };
 		F6A61B4D28349C4F00C749D4 /* NavigationStack.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NavigationStack.swift; sourceTree = "<group>"; };
 		F6A61B4F28349F0600C749D4 /* Page.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Page.swift; sourceTree = "<group>"; };
+		F6A61B6328380EEA00C749D4 /* ErrorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ErrorView.swift; sourceTree = "<group>"; };
+		F6A61B65283811B000C749D4 /* Test.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Test.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -67,6 +71,8 @@
 				F6A61B3D2833FBE000C749D4 /* Preview Content */,
 				F6A61B472833FC3E00C749D4 /* Page1View.swift */,
 				F6A61B4F28349F0600C749D4 /* Page.swift */,
+				F6A61B6328380EEA00C749D4 /* ErrorView.swift */,
+				F6A61B65283811B000C749D4 /* Test.swift */,
 			);
 			path = Navigation;
 			sourceTree = "<group>";
@@ -153,6 +159,8 @@
 				F6A61B382833FBDF00C749D4 /* NavigationApp.swift in Sources */,
 				F6A61B4C2833FC5B00C749D4 /* Page3View.swift in Sources */,
 				F6A61B5028349F0600C749D4 /* Page.swift in Sources */,
+				F6A61B6428380EEA00C749D4 /* ErrorView.swift in Sources */,
+				F6A61B66283811B000C749D4 /* Test.swift in Sources */,
 				F6A61B4A2833FC5100C749D4 /* Page2View.swift in Sources */,
 				F6A61B482833FC3E00C749D4 /* Page1View.swift in Sources */,
 			);

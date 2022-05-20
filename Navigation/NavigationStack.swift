@@ -8,134 +8,115 @@
 import Combine
 import SwiftUI
 
-struct NavigationStackView<ItemIdentifier: Equatable, DestinationView: View>: View {
-    let navigationStack: NavigationStack<ItemIdentifier>
-    let initialDestination: () -> DestinationView
+protocol RouteBuilder {
+    associatedtype ItemIdentifier: Equatable
+    associatedtype RouteView: View
+    
+    func routeView(_ identifier: ItemIdentifier) -> RouteView
+}
 
+struct Router<ItemIdentifier, RB: RouteBuilder>: View where RB.ItemIdentifier == ItemIdentifier {
+    
+    @ObservedObject var navigationStack: NavigationStack<ItemIdentifier>
+    let routeBuilder: RB
+    
     var body: some View {
         NavigationView {
-            initialDestination()
+            navigationView()
         }
         .navigationViewStyle(.stack)
         .environmentObject(navigationStack)
     }
+    
+    private func navigationView() -> AnyView? {
+        navigationStack.stack.reversed().reduce(nil, { res, ident in
+            if ident == navigationStack.stack.first! {
+                return AnyView(
+                    VStack {
+                        routeBuilder.routeView(ident).onAppear {
+                            navigationStack.navigationItemAppeared(ident)
+                        }
+                        res
+                    }
+                )
+            } else {
+                return AnyView(NavigationLink(isActive: Binding(get: {
+                    navigationStack.isActive(ident)
+                }, set: { _,_ in
+                    
+                }), destination: {
+                    VStack {
+                        if res != nil {
+                            res
+                        }
+                        routeBuilder.routeView(ident).onAppear {
+                            navigationStack.navigationItemAppeared(ident)
+                        }
+                    }
+                }, label: EmptyView.init))
+            }
+        })
+    }
 }
 
 class NavigationStack<ItemIdentifier: Equatable>: ObservableObject {
-    fileprivate enum Action {
-        case push(ItemIdentifier)
-        case pop(ItemIdentifier)
-    }
-
-    fileprivate var stack: [ItemIdentifier] = []
-    fileprivate var actions: AnyPublisher<Action, Never> {
-        return actionSubject.eraseToAnyPublisher()
-    }
+   
+    @Published fileprivate var stack: [ItemIdentifier] = []
     
-    private let actionSubject: PassthroughSubject<Action, Never>
     private let navigationItemAppearedSubject: PassthroughSubject<ItemIdentifier, Never>
     private var navigationItemAppearedSubscription: AnyCancellable?
     
-    init(initialIdentifier: ItemIdentifier) {
-        self.stack = [initialIdentifier]
-        self.actionSubject = PassthroughSubject()
+    init() {
+        self.stack = []
         self.navigationItemAppearedSubject = PassthroughSubject()
-
-        self.navigationItemAppearedSubscription = navigationItemAppearedSubject.scan((nil, initialIdentifier)) { prev, next in
+        
+        self.navigationItemAppearedSubscription = navigationItemAppearedSubject.scan((nil, nil)) { prev, next in
             (prev.1, next)
         }.sink(receiveValue: { [weak self] values in
             guard let self = self else { return }
             // Determine if a view is being popped by the navigation bar back button
-            if let prev = values.0, let prevIndex = self.stack.lastIndex(of: prev), let nextIndex = self.stack.lastIndex(of: values.1) {
+            if let prev = values.0, let next = values.1, let prevIndex = self.stack.lastIndex(of: prev), let nextIndex = self.stack.lastIndex(of: next) {
                 if prevIndex > nextIndex {
                     self.pop()
                 }
             }
         })
     }
-
+    
     func popTo(_ identifier: ItemIdentifier) {
         if let index = stack.lastIndex(of: identifier) {
             if index > 0 {
-                if let toIndex = stack.lastIndex(of: identifier) {
-                    actionSubject.send(.pop(stack[toIndex + 1]))
-                }
                 stack = Array(stack[0 ... index])
             }
         }
     }
-
+    
     func pop() {
-        if let lastItem = stack.last, stack.count > 1 {
-            actionSubject.send(.pop(lastItem))
+        if stack.count > 1 {
             stack.removeLast()
         }
     }
-
+    
     func popToRoot() {
         if let first = stack.first, stack.count > 1 {
-            actionSubject.send(.pop(stack[1]))
             stack = [first]
         }
     }
-
+    
     func push(_ identifier: ItemIdentifier) {
         if stack.contains(identifier) {
             fatalError("\(String(describing: identifier)) already exists in the navigation stack.")
         }
-
+        
         stack.append(identifier)
-        actionSubject.send(.push(identifier))
+    }
+    
+    func isActive(_ identifier: ItemIdentifier) -> Bool {
+        return stack.contains(identifier)
     }
     
     fileprivate func navigationItemAppeared(_ identifier: ItemIdentifier) {
         navigationItemAppearedSubject.send(identifier)
     }
-}
-
-struct NavigationStackLink<DestinationView: View, LabelView: View, ItemIdentifier: Equatable>: View {
     
-    @EnvironmentObject var navigationStack: NavigationStack<ItemIdentifier>
-
-    let destination: () -> DestinationView
-    let label: () -> LabelView
-    let destinationIdentifier: ItemIdentifier
-
-    @State private var isActive: Bool = false
-
-    public init(destinationIdentifier: ItemIdentifier, @ViewBuilder destination: @escaping () -> DestinationView, @ViewBuilder label: @escaping () -> LabelView) {
-        self.destinationIdentifier = destinationIdentifier
-        self.destination = destination
-        self.label = label
-    }
-
-    var body: some View {
-        Group {
-            Button(action: {
-                self.navigationStack.push(self.destinationIdentifier)
-                self.isActive = true
-            }, label: label)
-
-            NavigationLink(isActive: $isActive, destination: {
-                destination().onAppear {
-                    navigationStack.navigationItemAppeared(destinationIdentifier)
-                }
-            }) {
-                EmptyView()
-            }
-            .isDetailLink(false)
-            .onReceive(navigationStack.actions) { action in
-                switch action {
-                case let .pop(identifier):
-                    if identifier == destinationIdentifier {
-                        isActive = false
-                    }
-                case let .push(identifier):
-                    if identifier == destinationIdentifier {
-                        isActive = true
-                    }
-                }
-            }
-        }
-    }
 }

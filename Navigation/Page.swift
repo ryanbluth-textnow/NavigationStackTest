@@ -11,4 +11,5 @@ enum Page: Equatable {
     case page1
     case page2
     case page3(subsection: Int)
+    case error(message: String)
 }

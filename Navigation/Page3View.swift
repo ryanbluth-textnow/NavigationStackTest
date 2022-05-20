@@ -11,23 +11,27 @@ struct Page3View: View {
     
     let subsection: Int
     
-    @EnvironmentObject var navigationStack: NavigationStack<Page>
+    @EnvironmentObject var coordinator: TestCoordinator
     
     var body: some View {
         VStack {
-            NavigationStackLink(destinationIdentifier: Page.page3(subsection: subsection + 1), destination: {
-                Page3View(subsection: subsection + 1)
-            }, label: {
-                Text("To Page 3.\(subsection + 1)")
-            })
-            Button("Pop") {
-                navigationStack.pop()
+            Button("Back") {
+                coordinator.back()
             }
-            Button("Pop to Page 2") {
-                navigationStack.popTo(Page.page2)
+            Button("To Page 3.\(subsection + 1)") {
+                coordinator.toPage3(subsection: subsection + 1)
             }
-            Button("Pop to root") {
-                navigationStack.popToRoot()
+            Button("To Error"){
+                coordinator.toError()
+            }
+            Button("Back") {
+                coordinator.back()
+            }
+            Button("To Page 2") {
+                coordinator.toPage2()
+            }
+            Button("Complete") {
+                coordinator.complete()
             }
         }
         .navigationTitle("Page 3.\(subsection)")
