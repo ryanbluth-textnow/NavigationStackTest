@@ -36,8 +36,12 @@ class TestCoordinator: ObservableObject {
     }
     
     func toError() {
-        navigationStack.popToRoot()
-        navigationStack.push(.error(message: "Uh oh. Error!"))
+        navigationStack.popTo(.page1)
+        // You can't pop and push in the same transaction.
+        // This seems to be a limitiation of NavigationView
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.01, execute: {
+            self.navigationStack.push(.error(message: "Uh oh. Error!"))
+        })
     }
     
     func complete(){

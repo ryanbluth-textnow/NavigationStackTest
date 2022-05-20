@@ -28,34 +28,35 @@ struct Router<ItemIdentifier, RB: RouteBuilder>: View where RB.ItemIdentifier ==
         .environmentObject(navigationStack)
     }
     
-    private func navigationView() -> AnyView? {
-        navigationStack.stack.reversed().reduce(nil, { res, ident in
-            if ident == navigationStack.stack.first! {
+    // Builds a recursive NavigationLink structrue to match the current navigation stack.
+    @ViewBuilder private func navigationView() -> some View {
+        let res: AnyView? = navigationStack.stack.reversed().reduce(nil, { res, identifier in
+            if identifier == navigationStack.stack.first! {
                 return AnyView(
                     VStack {
-                        routeBuilder.routeView(ident).onAppear {
-                            navigationStack.navigationItemAppeared(ident)
+                        routeBuilder.routeView(identifier).onAppear {
+                            navigationStack.navigationItemAppeared(identifier)
                         }
                         res
                     }
                 )
             } else {
                 return AnyView(NavigationLink(isActive: Binding(get: {
-                    navigationStack.isActive(ident)
+                    navigationStack.isActive(identifier)
                 }, set: { _,_ in
-                    
                 }), destination: {
                     VStack {
                         if res != nil {
                             res
                         }
-                        routeBuilder.routeView(ident).onAppear {
-                            navigationStack.navigationItemAppeared(ident)
+                        routeBuilder.routeView(identifier).onAppear {
+                            navigationStack.navigationItemAppeared(identifier)
                         }
                     }
                 }, label: EmptyView.init))
             }
         })
+        res
     }
 }
 
@@ -70,11 +71,15 @@ class NavigationStack<ItemIdentifier: Equatable>: ObservableObject {
         self.stack = []
         self.navigationItemAppearedSubject = PassthroughSubject()
         
-        self.navigationItemAppearedSubscription = navigationItemAppearedSubject.scan((nil, nil)) { prev, next in
-            (prev.1, next)
+        // Collect the last and previous values from the navigationItemAppearedSubject so we can compare them.
+        // We know the current view was popped by some external factor(ex: the back button) if the next value is before the previous value in the stack
+        self.navigationItemAppearedSubscription = navigationItemAppearedSubject.scan((nil, nil)) { previous, next in
+            // Collect the previous value and the next value in a tuple
+            // ex: (nil, nil) -> .identifier1 = (nil, identifier1) -> .identifier2 = (identifier1, identifier2) -> .identifier2 = (identifier2, identifier3)
+            (previous.1, next)
         }.sink(receiveValue: { [weak self] values in
             guard let self = self else { return }
-            // Determine if a view is being popped by the navigation bar back button
+            // Compare the next and previous identifiers in order to determine if a view was popped
             if let prev = values.0, let next = values.1, let prevIndex = self.stack.lastIndex(of: prev), let nextIndex = self.stack.lastIndex(of: next) {
                 if prevIndex > nextIndex {
                     self.pop()
@@ -85,9 +90,7 @@ class NavigationStack<ItemIdentifier: Equatable>: ObservableObject {
     
     func popTo(_ identifier: ItemIdentifier) {
         if let index = stack.lastIndex(of: identifier) {
-            if index > 0 {
-                stack = Array(stack[0 ... index])
-            }
+            stack = Array(stack[0...index])
         }
     }
     
